@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script  src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <button id="button1" disabled>click</button>
+    <button id="joinaroom">join a room</button>
+    <div id="writing"></div>
+    <h3 id="yourcounterheading">your counts</h3>
+    <h3 id="yourcounter">0</h3>
+    <h3 id="othercounterheading">Strangers counts</h3>
+    <h3 id="writing2">0</h3>
+    <h3 id="timer"></h3>
+    <script>
+        var counter=0;
+        const button1=document.getElementById("button1")
+    const writing2=document.getElementById("writing2")
+    const yourcounter=document.getElementById("yourcounter")
+        const button2=document.getElementById("joinaroom")
+        var socket = io();
+        socket.on('connect',()=>
+    {
+          console.log(`connection to server with socket id ${socket.id}`)
+    })
+    const writing=document.getElementById("writing")
+    const timer=document.getElementById("timer")
+  let timeing=5;
+  let oneMinute=10;
+   socket.on("joined",(data)=>
+   {
+    writing.innerHTML=""
+    writing.innerHTML=`you have joined the room with room number ${data}`;
+
+  const interval= setInterval(()=>
+   {
+    console.log("hi")
+      if(timeing>=0)
+      {
+      timer.innerHTML=timeing;
+      timeing--;
+      }
+      else{
+        button1.disabled=false;
+        console.log("hi")
+        timer.innerHTML="BEgin!!"
+        const interval2=setInterval(()=>
+        {
+             if(oneMinute>=0)
+             {
+                timer.innerHTML=oneMinute;
+                oneMinute--;
+             }
+             else{
+                socket.emit("leave",data)
+                writing.innerHTML="you left room"
+                timer.innerHTML="Game Over"
+              yourcounter.innerHTML=0;
+              writing2.innerHTML=0;
+              timeing=5;
+              oneMinute=10;
+              counter=0;
+                button1.disabled=true;
+                button2.disabled=false;
+                clearInterval(interval2)
+             }
+        },1000)
+        clearInterval(interval)
+      }
+   },1000)
+   
+    
+   })
+
+   socket.on("winner",(data)=>
+   {
+    if(socket.id===data)
+    {
+    timer.innerHTML="you won"
+    }
+    else
+    {
+      timer.innerHTML="you lost"
+    }
+   })
+   socket.on("waiting",(data)=>
+   {
+    writing.innerHTML=data;
+   })
+   
+    button1.addEventListener('click',()=>
+    {
+
+        counter++;
+          yourcounter.innerHTML=counter;
+          socket.emit('clicked',counter)
+    })
+  
+
+    socket.on("counter",(data)=>
+    {
+        writing2.innerHTML=data;
+    })
+    button2.addEventListener('click',()=>
+    {
+
+        button2.disabled=true;
+        socket.emit('join',"join a room")
+    })
+    </script>
+</body>
+</html>
