@@ -8,6 +8,8 @@
 </head>
 <body>
     <script  src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    <input id="loginphone">
+    <buttton id="phonesend"></buttton>
     <button id="button1" disabled>click</button>
     <button id="joinaroom">join a room</button>
     <div id="writing"></div>
@@ -16,16 +18,62 @@
     <h3 id="othercounterheading">Strangers counts</h3>
     <h3 id="writing2">0</h3>
     <h3 id="timer"></h3>
+    <h3 id="countdowntimer">j</h3>
+    <button id="joinHour">join a hourly game</button>
+    <button id="hourbutton">click counted for hour</button>
+    <h3 id="leaderboardclient"></h3>
     <script>
         var counter=0;
         const button1=document.getElementById("button1")
+        const phonenumber=document.getElementById("loginphone")
+        const phonesend=document.getElementById("phonesend")
+        phonesend.addEventListener("click",()=>
+        {
+          phonenumber.value
+        })
+        const countdowntimer=document.getElementById("countdowntimer")
     const writing2=document.getElementById("writing2")
     const yourcounter=document.getElementById("yourcounter")
         const button2=document.getElementById("joinaroom")
+        const joinhour=document.getElementById("joinHour");
+        const hourbutton=document.getElementById("hourbutton")
         var socket = io();
         socket.on('connect',()=>
     {
           console.log(`connection to server with socket id ${socket.id}`)
+    })
+    socket.on("connect_failed",()=>
+    {
+      console.log("problem in connection")
+    })
+    socket.on("error",(error)=>
+    {
+    console.log(error)
+    })
+    socket.on("connecting",()=>
+    {
+      console.log("connecting")
+    })
+    socket.on("disconnect",()=>
+    {
+      console.log("disconnected")
+    })
+    socket.on("countdown",(second)=>
+    {
+      console.log(second)
+      
+     
+  let minutes = Math.floor(second / 60);
+  let hours = Math.floor(minutes / 60);
+  second = second % 60;
+  minutes = minutes % 60;
+  hours = hours % 24;
+  second = second < 10 ? "0" + second : second;
+  minutes = minutes < 10 ? "0" + minutes : minutes;
+  hours = hours < 10 ? "0" + hours : hours;
+  console.log(hours+" "+minutes+" "+second)
+   countdowntimer.innerHTML=""
+         countdowntimer.innerHTML=hours+" hours "+minutes+" minutes "+second +" seconds"
     })
     const writing=document.getElementById("writing")
     const timer=document.getElementById("timer")
@@ -110,6 +158,32 @@
 
         button2.disabled=true;
         socket.emit('join',"join a room")
+    })
+let hourCounter=0
+    joinhour.addEventListener('click',()=>
+    {
+       socket.emit("joinHour");
+         
+         setTimeout(()=>
+         {
+             socket.emit("hourCounter",hourCounter)
+         },6000)
+
+    })
+    socket.on("leaderboard",(data)=>
+    {
+      leaderboardclient.innerHTML=""
+      const length=data.length;
+        for (let i=0;i<length;i++)
+        {
+            const p=document.createElement('p');
+            p.innerHTML=data[i].name+"   "+data[i].counter;
+            leaderboardclient.append(p);
+        }
+    })
+    hourbutton.addEventListener("click",()=>
+    {
+      hourCounter++;
     })
     </script>
 </body>

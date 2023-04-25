@@ -6,12 +6,28 @@ import { fileURLToPath } from 'url';
 const app=express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 console.log(__dirname)
+console.log(path.join(__dirname,'/index.html'))
 const server= http.createServer(app)
 const waitingUsers=[];
 const io= new Server(server)
 var room=1;
 let users={}
+let leaderboard=[]
+let countdowntimer=60*60;
+setInterval(()=>
+{
+if(countdowntimer>0)
+{ console.log(countdowntimer)
+  countdowntimer--;
+  io.emit("countdown",countdowntimer)
+}
+else
+{
+    countdowntimer=60*60;
+}
+},1000)
 io.on('connection',(socket)=>
 {  
     console.log(`socket connection done`)
@@ -70,6 +86,10 @@ socket.on("leave",(data)=>
     console.log("left")
 })
 
+socket.on('joinHour',()=>
+{
+    socket.join("hourlyroom");
+})
 socket.on("clicked",(data)=>
 {
     users[socket.id].counter=data;
@@ -85,13 +105,26 @@ else{
     socket.emit("waitforanother","lets wait for another")
 }
 })
-
+socket.on("disconnect",()=>
+{
+    console.log("disconnect")
+})
 
 //     socket.on("clicked",(data)=>
 // {
 //     console.log(data)
 //     socket.emit("sendingdata",data)
 // })
+socket.on("hourCounter",(data)=>
+{   
+    console.log('someone competed in hour event')
+        leaderboard.push({name:socket.id,counter:data})
+        leaderboard.sort((a,b)=>b.counter-a.counter)
+        io.to("hourlyroom").emit("leaderboard",leaderboard)
+        console.log(leaderboard)
+
+})
+// const oneHour=60*60*1000;
 
 })
 
